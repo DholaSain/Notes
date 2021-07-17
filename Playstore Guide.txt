@@ -1,0 +1,63 @@
+https://flutter.dev/docs/deployment/android
+
+Add App Icon & Title
+Title=> Androidmenifest => label name
+Icon=>
+pubspec.yaml=>>>
+------------------------------------------
+  flutter_launcher_icons: ^0.9.0
+
+flutter_icons:
+  image_path: "assets/e-radio.png"
+  android: true
+  ios: true
+  adaptive_icon_background: "assets/back.png"
+  adaptive_icon_foreground: "assets/e-radio.png"
+--------------------------------------------
+
+=>>>>> flutter pub run flutter_launcher_icons:main
+
+Set Package Name
+
+create a file key.properties
+==================================>
+storePassword=<password from previous step>
+keyPassword=<password from previous step>
+keyAlias=upload
+storeFile=../app/upload-keystore.jks
+==================================>
+
+keytool -genkey -v -keystore C:\Users\mujah\upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+move the file to the android/app
+
+
+
+build.gradle
+
+1.
+   def keystoreProperties = new Properties()
+   def keystorePropertiesFile = rootProject.file('key.properties')
+   if (keystorePropertiesFile.exists()) {
+       keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+   }
+
+   android {
+         ...
+   }
+
+2.
+   signingConfigs {
+       release {
+           keyAlias keystoreProperties['keyAlias']
+           keyPassword keystoreProperties['keyPassword']
+           storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+           storePassword keystoreProperties['storePassword']
+       }
+   }
+   buildTypes {
+       release {
+           signingConfig signingConfigs.release
+       }
+   }
+
+flutter build appbundle ==================================>
