@@ -3,3 +3,6 @@ DateTime timegetter = DateTime.now();
 var convertedDateTime =
         "${timegetter!.hour.toString().padLeft(2, '0')}-${timegetter!.minute.toString().padLeft(2, '0')}-${timegetter!.second.toString().padLeft(2, '0')}"
             .obs;
+            
+// 12 Hour and Date
+DateFormat('h:mm a - ' 'MMMM d, ' 'yyyy').format(val);
