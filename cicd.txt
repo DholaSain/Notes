@@ -1,0 +1,230 @@
+
+# Time Cap
+
+This documentation states the procedure of setting up the CI for both Android and IOS. 
+
+
+## Technologies used
+
+- Fastlane
+- Github Actions
+- Xcode cloud
+
+
+
+## Setup for Android
+
+This section covers the Android CI for TimecapAPI
+
+### Install and Setup Fastlane
+
+Please refer to the [fastlane](https://docs.fastlane.tools/) documentation. To see the installation procedures for fastlane and ruby. We recommend using Macos to setup the whole project.
+
+- Open the Google Play Console
+- Click Account Details, and note the Developer Account ID listed there
+- Click Setup → API access
+- Click the Create new service account button
+- Follow the Google Cloud Platform link in the dialog, which opens a new tab/window:
+  * Click the CREATE SERVICE ACCOUNT button at the top of the Google Cloud Platform Console
+  * Verify that you are on the correct Google Cloud Platform Project by looking for the Developer Account ID from earlier within the light gray text in the second input, preceding .iam.gserviceaccount.com. If not, open the picker in the top navigation bar, and find the one with the ID that contains it.
+  * Provide a Service account name and click Create
+  * Click Select a role, then find and select Service Account User, and proceed
+  * Click the Done button
+  * Click on the Actions vertical three-dot icon of the service account you just created
+  * Select Manage keys on the menu
+  * Click ADD KEY -> Create New Key
+  * Make sure JSON is selected as the Key type, and click CREATE
+  * Save the file on your computer when prompted and remember where it was saved to
+- Return to the Google Play Console tab, and click DONE to close the dialog
+- Click on Grant Access for the newly added service account at the bottom of the screen (you may need to click Refresh service accounts before it shows up)
+- Choose the permissions you'd like this account to have. We recommend Admin (all permissions), but you may want to manually select all checkboxes and leave out some of the Releases permissions such as Release to production
+- Click Invite user to finish
+
+#### After acquiring the play store credentials
+
+Here is what you will have to do after you get the JSON file for the credentials. You can go to [code beautifer json converter](https://codebeautify.org/json-to-base64-converter). Copy all the data inside the JSON file and convert it to _base64_ format. This is an important step. Because this will be used as an environment variable within the github actions.
+
+
+
+
+### Setup Flutter project
+
+Create a flutter application
+
+```bash
+flutter create my-project
+cd my-project/android
+```
+
+Then initialize fastlane, it will prompt you with some questions. And when it prompts for the google cloud API, just enter a dummy url, since we are going to configure it later.
+
+```bash
+fastlane init
+```
+### Setup Lanes for Android builds
+
+After it has been initialized you will see a folder in the _myproject/android/fastlane_
+
+
+Now you will see 2 files _'AppFile'_ and _'FastFile'_
+You can use your text editor to view these files in 
+_FastFile_ you will have to add the following for **Development enviroment** if you want.
+
+```ruby
+  desc "Submit a new production AAB to the Google Play for Internal Testers"
+  lane :deploy_internal do
+
+    upload_to_play_store(
+      json_key: ENV["ANDROID_JSON_KEY_FILE"],
+      track: 'internal',
+      aab: '../build/app/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+     )
+  end
+```
+
+The _ENV["ANDROID_JSON_KEY_FILE"]_ is the environment variable that we will use for creating our build.
+
+
+### Setup Github secrets
+
+Go to the repository settings on the left where you can see a list of settings, go to _Secrets and variables_, select _Actions_. Add a repository secret with the same name as the environment variable, in our case it was _ANDROID_JSON_KEY_FILE_.
+
+
+### Setup of Github actions for Android build
+
+- Setup of branch configurations, to trigger the builds, the snippet below shows that it will trigger on all branches and will only work if the pubspec.yaml has been changed, because we need to change the version of the application manually
+
+```yaml
+name: Development build
+on:
+  push:
+    branches: "*"
+    paths: 
+      - "pubspec.yaml"
+```
+
+- Setup of the job to build the flutter app. Since Android application requires Java to be built upon, it is **necessary** to ensure that we have Java installed on the instance that will create the build.It is recommended to use Java 11 or newer to create the builds
+
+```yaml
+jobs:
+  release-android:
+    name: Build and release Android app
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: '11.x'
+```
+
+- Install FLutter to create a flutter build, Ensure that the Flutter version being used corresponds to the version the app is developed on.
+
+```yaml
+  - uses: subosito/flutter-action@v2.8.0
+      with:
+        flutter-version: '3.7.5'
+```
+
+- Fastlane uses Ruby to work its magic, therefore it must be installed as well.
+
+```yaml
+ - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1.2'
+```
+
+- Now we setup a base64 decoder that will inject our secrets that were created on Github.
+
+```yaml
+    - name: Decode Service Account Key JSON File
+      uses: timheuer/base64-to-file@v1
+      id: service_account_json_file
+      with:
+       fileName: "serviceAccount.json"
+       encodedString: ${{ secrets.GPLAY_SERVICE_ACCOUNT_KEY_JSON }}
+```
+
+- Install Fastlane
+
+```yaml
+  - name: Install Fastlane
+    run: cd android && bundle install && cd ..
+```
+
+- Install Flutter packages
+```yaml
+  - name: Install packages
+    run: flutter pub get
+  - name: Prebuild
+    run: flutter build appbundle
+```
+
+- Execute the fastlane command to release the Android build
+
+```yaml
+    - name: Execute Fastlane command
+      run: cd android && bundle exec fastlane deploy_internal
+      env:
+       ANDROID_JSON_KEY_FILE: ${{ steps.service_account_json_file.outputs.filePath }}
+```
+You can also see the final workflow [here](https://github.com/Vault-Investment-Group/timecap_app/blob/main/.github/workflows/dev.yml)
+
+
+#### Optional step
+
+To add Slack notifications here is a demo, go to the [documentation](https://api.slack.com/messaging/webhooks). Set up an App, and create a slack webhook. Then create a Github Action secret and add the following to your Github actions
+
+```yaml
+    - name: Slack Notification for Android
+      uses: rtCamp/action-slack-notify@v2
+      env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: 'cicd-notifications'
+          SLACK_COLOR: ${{ job.status }} # or a specific color like 'good' or '#ff00ff'
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_MESSAGE: 'Post Content :rocket:'
+          SLACK_TITLE: Post Title
+          SLACK_USERNAME: rtCamp  
+```
+
+
+
+
+## Setup CI for iOS
+
+For iOS the CI is relatively much simpler as compared to Android, go to the [link](https://docs.flutter.dev/deployment/cd) for Flutter documentation and look for *XCode Cloud* where you will find set of comprehensive instructions on how to setup XCode cloud.
+
+Here are some additional configurations ![image1](https://firebasestorage.googleapis.com/v0/b/geekybugs-apps.appspot.com/o/Screenshots%2FScreenshot%202023-03-31%20at%2012.08.54%20PM.png?alt=media)
+
+### Selecting the Xcode version
+
+It is important to note that we are currently using Xcode version **14.2**
+
+![image2](https://firebasestorage.googleapis.com/v0/b/geekybugs-apps.appspot.com/o/Screenshots%2FScreenshot%202023-03-31%20at%2012.09.02%20PM.png?alt=media)
+
+### Selecting the branch
+
+We will select the branches and apply wildcards on to create builds for the specified branches. Also a build will only trigger if the *pubspec.yaml* file is changed/modified. For e.g Change the version.
+
+![image3](https://firebasestorage.googleapis.com/v0/b/geekybugs-apps.appspot.com/o/Screenshots%2FScreenshot%202023-03-31%20at%2012.09.11%20PM.png?alt=media)
+
+### Uploading to TestFlight
+
+![image4](https://firebasestorage.googleapis.com/v0/b/geekybugs-apps.appspot.com/o/Screenshots%2FScreenshot%202023-03-31%20at%2012.09.15%20PM.png?alt=media)
+
+### Slack Integration
+
+For Slack xcode will redirect to Slack website where it will require permissions. After granting the permission it should look like this
+
+![image5](https://firebasestorage.googleapis.com/v0/b/geekybugs-apps.appspot.com/o/Screenshots%2FScreenshot%202023-03-31%20at%2012.09.54%20PM.png?alt=media&token=862d671c-f870-40f0-b10b-080c397da739)
+
+### Distribution
+
+Distributing the application, configure for development or prod.
+
+![image6](https://firebasestorage.googleapis.com/v0/b/geekybugs-apps.appspot.com/o/Screenshots%2FScreenshot%202023-03-31%20at%2012.10.06%20PM.png?alt=media&token=9cbc9d09-e5b0-4ee8-aae4-079999191d44)
