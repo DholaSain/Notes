@@ -1,0 +1,13 @@
+Problem: iOS App not showing up in the Settings.
+
+Solution: 
+
+iOS uses settings bundle to display applications in system settings. Turns out Flutter is not creating it upon project creation.
+In order to create it:
+1. Open ios folder in xcode
+2. Open Runner entry in the project view, it should contain a bunch of folders, one of which is
+Runner again
+3. Right-click the inner Runner entry
+4. Select New file...
+5. Select Settings Bundle and confirm the selection (then press create with default settings)
+6. Open Root.plist file and remove all Preference Items so that the array is empty Once you reinstall the app, an entry in settings should appear. Once you request some permission (e.g. location) and deny/approve it, it should be automatically added there.
