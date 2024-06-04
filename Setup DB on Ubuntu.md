@@ -62,12 +62,11 @@ check PSQL version
 psql -c "SELECT version();"
 ```
 Add a line: 
-```
-host all all 0.0.0.0/0 md5
-```
+`host all all 0.0.0.0/0 md5`
+
 Restart PostgreSQL to apply changes: 
 ```bash
-sudo systemctl restart PostgreSQL
+sudo systemctl restart postgresql
 ```
 
 Configure NestJS to Use the PostgreSQL Database:
