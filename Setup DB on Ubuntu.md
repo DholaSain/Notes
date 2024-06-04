@@ -8,37 +8,62 @@ sudo apt-get update
 
 Install PostgreSQL: 
 ```bash
-sudo apt-get install postgresql postgresql-contrib```
+sudo apt-get install postgresql postgresql-contrib
+```
 
 Configure PostgreSQL:
 
 Switch to the postgres user: 
 ```bash
-sudo -i -u postgres```
+sudo -i -u postgres
+```
 
 Access the PostgreSQL prompt: 
 ```bash
-psql```
+psql
+```
 
 Create a database for your NestJS app: 
 ```bash
-CREATE DATABASE your_database_name;```
+CREATE DATABASE your_database_name;
+```
 Create a user and password for accessing the database (substitute your own details): 
 ```bash
-CREATE USER your_username WITH ENCRYPTED PASSWORD 'your_password';```
+CREATE USER your_username WITH ENCRYPTED PASSWORD 'your_password';
+```
 
 Grant privileges to the user: 
 ```bash
-GRANT ALL PRIVILEGES ON DATABASE your_database_name TO your_username;```
+GRANT ALL PRIVILEGES ON DATABASE your_database_name TO your_username;
+```
 
-Exit the PostgreSQL prompt: \q and then exit to return to your regular user.
+Exit the PostgreSQL prompt: 
+```bash\q
+``` and then exit to return to your regular user.
 Modify PostgreSQL Configurations to Allow Connections:
 
-Open the PostgreSQL configuration file for editing: sudo nano /etc/postgresql/{version}/main/postgresql.conf
+Open the PostgreSQL configuration file for editing:
+```bash
+sudo nano /etc/postgresql/{version}/main/postgresql.conf
+```
 Look for the line that says #listen_addresses = 'localhost' and change it to listen_addresses = '*'
-Then, edit the pg_hba.conf file: sudo nano /etc/postgresql/{version}/main/pg_hba.conf
-Add a line: host all all 0.0.0.0/0 md5
-Restart PostgreSQL to apply changes: sudo systemctl restart postgresql
+Then, edit the pg_hba.conf file: 
+```bash
+sudo nano /etc/postgresql/{version}/main/pg_hba.conf
+```
+check PSQL version
+```bash
+postgres --version
+```
+Add a line: 
+```
+host all all 0.0.0.0/0 md5
+```
+Restart PostgreSQL to apply changes: 
+```bash
+sudo systemctl restart PostgreSQL
+```
+
 Configure NestJS to Use the PostgreSQL Database:
 
 In your NestJS application, configure the database connection settings to point to your new PostgreSQL database using the username, password, and database name you created.
