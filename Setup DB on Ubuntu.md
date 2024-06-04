@@ -42,8 +42,10 @@ GRANT ALL PRIVILEGES ON DATABASE your_database_name TO your_username;
 ```
 
 Exit the PostgreSQL prompt: 
-```bash\q
-``` and then exit to return to your regular user.
+```bash
+\q
+```
+and then exit to return to your regular user.
 Modify PostgreSQL Configurations to Allow Connections:
 
 Open the PostgreSQL configuration file for editing:
