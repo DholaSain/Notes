@@ -3,7 +3,8 @@
 Connect to your GCE instance via SSH.
 Update your package list: 
 ```bash
-sudo apt-get update```
+sudo apt-get update
+```
 
 Install PostgreSQL: 
 ```bash
