@@ -24,12 +24,16 @@ psql
 ```
 
 Create a database for your NestJS app: 
-```bash
+```SQL
 CREATE DATABASE your_database_name;
 ```
 Create a user and password for accessing the database (substitute your own details): 
-```bash
+```SQL
 CREATE USER your_username WITH ENCRYPTED PASSWORD 'your_password';
+```
+or update the password of postgres:
+```SQL
+ALTER USER postgres WITH ENCRYPTED PASSWORD 'PASSWORD';
 ```
 
 Grant privileges to the user: 
