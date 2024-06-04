@@ -59,7 +59,7 @@ sudo nano /etc/postgresql/{version}/main/pg_hba.conf
 ```
 check PSQL version
 ```bash
-postgres --version
+psql -c "SELECT version();"
 ```
 Add a line: 
 ```
