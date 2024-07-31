@@ -1,0 +1,62 @@
+Launch the EC2 instance and connect to it via SSH
+
+Do installations of Docker
+
+1. Update the system packages:
+sudo apt-get update
+
+2. Install prerequisites:
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+
+3. Add Docker's official GPG key:
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+4. Add Docker repository:
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+5. Update the package database with Docker packages:
+sudo apt-get update
+
+6. Install Docker:
+sudo apt-get install -y docker-ce
+
+7. Start Docker service:
+sudo systemctl start docker
+
+8. Enable Docker to start on boot:
+sudo systemctl enable docker
+
+9. Add your user to the docker group to run Docker commands without sudo:
+sudo usermod -aG docker ${USER}
+
+10. Log out and log back in for the group changes to take effect.
+
+After these steps, you can verify the installation by running:
+docker --version
+
+Now, create Docker networks.
+docker network create sonarqube-network
+
+Run PostgreSQL container:
+docker run -d --name sonarqube-db \
+  --network sonarqube-network \
+  -e POSTGRES_USER=sonar \
+  -e POSTGRES_PASSWORD=sonarpass \
+  -v sonarqube_db:/var/lib/postgresql/data \
+  postgres:15
+
+Run SonarQube container:
+docker run -d --name sonarqube \
+  --network sonarqube-network \
+  -p 9000:9000 \
+  -e SONAR_JDBC_URL=jdbc:postgresql://sonarqube-db:5432/sonar \
+  -e SONAR_JDBC_USERNAME=sonar \
+  -e SONAR_JDBC_PASSWORD=sonarpass \
+  -v sonarqube_data:/opt/sonarqube/data \
+  -v sonarqube_extensions:/opt/sonarqube/extensions \
+  -v sonarqube_logs:/opt/sonarqube/logs \
+  sonarqube:latest
+
+Access SonarQube at http://your_ec2_public_ip:9000
+
+Use sonar-scanner to run on local machines.
