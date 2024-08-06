@@ -1,0 +1,80 @@
+To install and set up PostgreSQL 15 specifically, we'll need to add the PostgreSQL repository since it might not be available in the default Ubuntu repositories. Here's how to install PostgreSQL 15 and set up your database:
+
+1. Add PostgreSQL repository:
+```
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+```
+
+2. Update package list and install PostgreSQL 15:
+```
+sudo apt update
+sudo apt install postgresql-15 postgresql-contrib-15
+```
+
+3. Verify the installation:
+```
+psql --version
+```
+
+4. Switch to the postgres user:
+```
+sudo -i -u postgres
+```
+
+5. Access the PostgreSQL prompt:
+```
+psql
+```
+
+6. Create the database:
+```
+CREATE DATABASE bumou;
+```
+
+7. Set the password for the postgres user:
+```
+ALTER USER postgres WITH PASSWORD 'bumou1122';
+```
+
+8. Grant privileges to the postgres user on the bumou database:
+```
+GRANT ALL PRIVILEGES ON DATABASE bumou TO postgres;
+```
+
+9. Exit the PostgreSQL prompt:
+```
+\q
+exit
+```
+
+10. Configure PostgreSQL to allow password authentication:
+```
+sudo nano /etc/postgresql/15/main/pg_hba.conf
+```
+Find the line that looks like this:
+`local   all   postgres   peer`
+
+And change it to:
+`local   all   postgres   md5`
+
+And, Ensure you have a line like:
+`host    all    all    0.0.0.0/0    md5`
+
+Save and
+
+11. Check postgresql.conf:
+```
+sudo nano /etc/postgresql/15/main/postgresql.conf
+```
+Ensure `listen_addresses = '*'` is set.
+
+12. Restart PostgreSQL:
+```
+sudo systemctl restart postgresql
+```
+
+13. Check if DB is running on 5432
+```
+sudo ss -tunlp | grep 5432
+```
