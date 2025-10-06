@@ -3,9 +3,9 @@
 
 Create two envs from the same EB application:
 
-- myapp-prod-blue
+- dira-prod-blue
 
-- myapp-prod-green
+- dira-prod-green
 
 
 ### CI/CD flow:
